@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-""" submit-files - a ############ """ 
 
 from setuptools import setup, find_packages
 import os
@@ -24,8 +23,8 @@ setup(
     author="BluVector",
     author_email="info@bluvector.io",
     url="https://www.bluvector.io",
-    description="",
-    license="Proprietary",
+    description="Package suited to submit files/directories to the BluVector Portal and log the results",
+    license="Apache 2.0",
     packages=find_packages(),
     entry_points={
         'console_scripts': [
