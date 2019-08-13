@@ -1,17 +1,22 @@
 # BluVector File Submission Python Wrapper
 submit_to_bv is a Python wrapper for the BluVector Malware Analysis Portal. It can be used to submit either individual files or a directory of files. Results of the BluVector analysis will be stored in a log. 
 
-## Build and Install
+## Develop
 This software is built using Python 3.7. The package should be built and tested in a Python 3.7 virtual environment.
 ```sh
 $ python3 -m venv submit-files
 $ source submit-files/bin/activate
-$ python setup.py [install | build]
 ```
 
 To deactivate the virtual environment:
 ```sh
 $ deactivate
+```
+
+### Build
+To build the python package:
+```sh
+$ python setup.py build
 ```
 
 ### Install
@@ -21,7 +26,7 @@ $ python setup.py install
 ```
 
 ### Test
-Run the tests from the top level of the repository.
+Run the unit tests from the top level of the repository.
 
 ```sh
 $ tox
