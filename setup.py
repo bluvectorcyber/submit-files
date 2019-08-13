@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
 
+# Copyright 2019 BluVector, A Comcast Company
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from setuptools import setup, find_packages
 import os
 import os.path
@@ -18,17 +34,17 @@ def get_version(pkg_name):
     return eval(version_line.split('=')[-1])
 
 setup(
-    name=PKG_NAME.replace('_', '-'),
+    name="submit-to-bv",
     version=get_version(PKG_NAME),
     author="BluVector",
     author_email="info@bluvector.io",
     url="https://www.bluvector.io",
     description="Package suited to submit files/directories to the BluVector Portal and log the results",
     license="Apache 2.0",
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests*']),
     entry_points={
         'console_scripts': [
-            'submit-files=submit_to_bv.submit_to_bv:main',
+            'submit-to-bv=submit_to_bv.submit_to_bv:main',
         ]
     },
     install_requires=get_install_requirements("requirements.txt")
