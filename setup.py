@@ -36,10 +36,10 @@ def get_version(pkg_name):
 setup(
     name="submit-to-bv",
     version=get_version(PKG_NAME),
-    author="BluVector",
+    author="BluVector, A Comcast Company",
     author_email="info@bluvector.io",
     url="https://www.bluvector.io",
-    description="Package suited to submit files/directories to the BluVector Portal and log the results",
+    description="Package suited to submit files/directories to the BluVector Malware Analysis Portal and log the results",
     license="Apache 2.0",
     packages=find_packages(exclude=['tests*']),
     entry_points={

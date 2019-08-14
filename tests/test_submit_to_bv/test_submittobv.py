@@ -30,7 +30,8 @@ from submit_to_bv.submit_to_bv import SubmitToBV
 
 def mock_response(
         status=200,
-        content="TEST",
+        message="TEST",
+        malicious=False,
         json_data=None,
         raise_for_status=None,
         reason='error occured',
@@ -38,7 +39,7 @@ def mock_response(
     mock_resp = Mock()
     mock_resp.raise_for_status.side_effect = raise_for_status
     mock_resp.status_code = status
-    mock_resp.content = content
+    mock_resp.content = json.dumps({ 'message': message, 'malicious': malicious })
     mock_resp.headers = {'x-feapi-token': 'test'}
     mock_resp.text = text
     mock_resp.ok = status < 400
@@ -69,7 +70,7 @@ class TestSubmitToBV(TestCase):
     @patch('requests.post')
     def test__invalid_credentials(self, mock_post, mock_print):
         mock_resp = mock_response(
-            status=400, content=json.dumps("ERROR"), reason="Bad Request")
+            status=400, message=json.dumps("ERROR"), reason="Bad Request")
         mock_post.return_value = mock_resp
         with patch("builtins.open", mock_open(read_data="data")) as mock_file:
             assert open(self.test_file).read() == "data"
@@ -83,8 +84,8 @@ class TestSubmitToBV(TestCase):
                         
     @patch('sys.stdout', new_callable=StringIO)
     @patch('requests.post')
-    def test__successful_analysis(self, mock_post, mock_print):
-        mock_resp = mock_response(content=json.dumps("MOCK RESULTS"))
+    def test__successful_analysis_benign(self, mock_post, mock_print):
+        mock_resp = mock_response(message="MOCK BENIGN")
         mock_post.return_value = mock_resp
         with patch("builtins.open", mock_open(read_data="data")) as mock_file:
             assert open(self.test_file).read() == "data"
@@ -92,6 +93,19 @@ class TestSubmitToBV(TestCase):
             stbv = SubmitToBV("fake_user", "fake_pass", "log")
             with self.assertLogs(level='INFO') as log:
                 stbv.submit(self.test_file)
-                self.assertIn("MOCK RESULTS", log.output[0])
+                self.assertIn("MOCK BENIGN", log.output[0])
             stbv.submit(self.test_file, log=False)
-            assert "MOCK RESULTS" in mock_print.getvalue()
+            assert "MOCK BENIGN" in mock_print.getvalue()
+            
+    @patch('sys.stdout', new_callable=StringIO)
+    @patch('requests.post')
+    def test__successful_analysis_malicious(self, mock_post, mock_print):
+        mock_resp = mock_response(message="MOCK MALICIOUS", malicious=True)
+        mock_post.return_value = mock_resp
+        with patch("builtins.open", mock_open(read_data="data")) as mock_file:
+            assert open(self.test_file).read() == "data"
+            mock_file.assert_called_with(self.test_file)
+            stbv = SubmitToBV("fake_user", "fake_pass", "log")
+            with self.assertLogs(level='WARNING') as log:
+                stbv.submit(self.test_file)
+                self.assertIn("MOCK MALICIOUS", log.output[0])

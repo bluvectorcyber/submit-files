@@ -27,7 +27,6 @@ import json
 import requests
 
 
-
 class SubmitToBV():
 
     def __init__(self, username, password, log="./submit_to_bv.log"):
@@ -38,7 +37,7 @@ class SubmitToBV():
             datefmt='%d-%b-%y %H:%M:%S',
             level=logging.INFO)
         self.password = password
-        self.base_url = 'http://api-dev.bluvector.io'
+        self.service_url = 'http://api-dev.bluvector.io/hector/v1/results'
         self.log = log
         self.logger = logging.getLogger(__name__)
         self.username = username
@@ -78,7 +77,11 @@ class SubmitToBV():
 
             msg = "{0}: {1}".format(fname, result)
             if log:
-                self.logger.info(msg)
+                print(result)
+                if result['malicious']:
+                    self.logger.warning(msg)
+                else:
+                    self.logger.info(msg)
             else:
                 print(msg)
 
@@ -91,7 +94,7 @@ class SubmitToBV():
                 filename: [string] fully qualified path to a file
         """
         response = requests.post(
-            url='{0}/hector/v1/results'.format(self.base_url),
+            url=self.service_url,
             files={
                 'file': open(filename, 'rb')
             },
