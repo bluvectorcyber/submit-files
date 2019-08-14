@@ -14,10 +14,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Change the self.base_url (line 37) to https://api.bluvector.io when moving from staging to production
-"""
-
 import argparse
 import logging
 import os
@@ -37,7 +33,7 @@ class SubmitToBV():
             datefmt='%d-%b-%y %H:%M:%S',
             level=logging.INFO)
         self.password = password
-        self.service_url = 'http://api-dev.bluvector.io/hector/v1/results'
+        self.service_url = 'https://api.bluvector.io/hector/v1/results'
         self.log = log
         self.logger = logging.getLogger(__name__)
         self.username = username
@@ -77,7 +73,6 @@ class SubmitToBV():
 
             msg = "{0}: {1}".format(fname, result)
             if log:
-                print(result)
                 if result['malicious']:
                     self.logger.warning(msg)
                 else:
@@ -98,7 +93,8 @@ class SubmitToBV():
             files={
                 'file': open(filename, 'rb')
             },
-            auth=(self.username, self.password)
+            auth=(self.username, self.password),
+            verify=False
         )
         if not response.ok:
             raise RuntimeError("File: {0}: Status Code: {1} -- {2}"

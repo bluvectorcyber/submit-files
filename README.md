@@ -16,6 +16,7 @@ $ deactivate
 ### Build
 To build the python package:
 ```sh
+$ pip install -r requirements.txt
 $ python setup.py build
 ```
 
