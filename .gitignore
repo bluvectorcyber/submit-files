@@ -11,6 +11,5 @@ coverage.xml
 .python-version
 build/
 dist/
-*.egg-info/
 submit-files/
 submit_to_bv.log

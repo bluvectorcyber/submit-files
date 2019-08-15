@@ -21,9 +21,14 @@ submit_to_bv.submit_to_bv.SubmitToBv
 
 import os
 import json
-from io import StringIO
+import sys
+import logging
+from io import StringIO, BytesIO
 from unittest import TestCase
-from unittest.mock import Mock, patch, mock_open
+try:
+    from unittest.mock import Mock, patch, mock_open
+except ImportError:
+    from mock import Mock, patch, mock_open
 
 from submit_to_bv.submit_to_bv import SubmitToBV
 
@@ -34,13 +39,13 @@ def mock_response(
         malicious=False,
         json_data=None,
         raise_for_status=None,
-        reason='error occured',
-        text='test'):
+        reason="error occured",
+        text="test"):
     mock_resp = Mock()
     mock_resp.raise_for_status.side_effect = raise_for_status
     mock_resp.status_code = status
-    mock_resp.content = json.dumps({ 'message': message, 'malicious': malicious })
-    mock_resp.headers = {'x-feapi-token': 'test'}
+    mock_resp.content = json.dumps({ "message": message, "malicious": malicious })
+    mock_resp.headers = {"x-feapi-token": "test"}
     mock_resp.text = text
     mock_resp.ok = status < 400
     mock_resp.reason = reason
@@ -55,10 +60,13 @@ class TestSubmitToBV(TestCase):
     
     def setUp(self):
         self.test_file = "./mock_file.txt"
-        f=open("mock_file.txt", "w+")
-        f.write("Testing testing 1,2,3")
-        f.close()
-        
+        with open("mock_file.txt", "w+") as f:
+            f.write("Testing testing 1,2,3")
+        # Determine location of builtin open method based on version of Python
+        self.open_at = "__builtin__.open"
+        if sys.version_info >= (3, 0):
+            self.open_at = "builtins.open"
+            
     def tearDown(self):
         os.remove(self.test_file)
     
@@ -66,46 +74,45 @@ class TestSubmitToBV(TestCase):
         stbv = SubmitToBV("user", "pass", "log")
         self.assertRaises(ValueError, stbv.submit, "fake_folder")
         
-    @patch('sys.stdout', new_callable=StringIO)
-    @patch('requests.post')
+    @patch("sys.stdout", new_callable=StringIO if sys.version_info >= (3, 0) else BytesIO)
+    @patch("requests.post")
     def test__invalid_credentials(self, mock_post, mock_print):
         mock_resp = mock_response(
             status=400, message=json.dumps("ERROR"), reason="Bad Request")
         mock_post.return_value = mock_resp
-        with patch("builtins.open", mock_open(read_data="data")) as mock_file:
+        with patch(self.open_at, mock_open(read_data="data")) as mock_file:
             assert open(self.test_file).read() == "data"
             mock_file.assert_called_with(self.test_file)
             stbv = SubmitToBV("fake_user", "fake_pass", "log")
-            with self.assertLogs(level='INFO') as log:
+            with patch.object(logging.Logger, "error") as log:
                 stbv.submit(self.test_file)
-                self.assertIn("400 -- Bad Request", log.output[0])
+                self.assertIn("400 -- Bad Request", "{0}".format(log.call_args[0][0]))
             stbv.submit(self.test_file, log=False)
             assert "400 -- Bad Request" in mock_print.getvalue()
                         
-    @patch('sys.stdout', new_callable=StringIO)
-    @patch('requests.post')
+    @patch("sys.stdout", new_callable=StringIO if sys.version_info >= (3, 0) else BytesIO)
+    @patch("requests.post")
     def test__successful_analysis_benign(self, mock_post, mock_print):
         mock_resp = mock_response(message="MOCK BENIGN")
         mock_post.return_value = mock_resp
-        with patch("builtins.open", mock_open(read_data="data")) as mock_file:
+        with patch(self.open_at, mock_open(read_data="data")) as mock_file:
             assert open(self.test_file).read() == "data"
             mock_file.assert_called_with(self.test_file)
             stbv = SubmitToBV("fake_user", "fake_pass", "log")
-            with self.assertLogs(level='INFO') as log:
+            with patch.object(logging.Logger, "info") as log:
                 stbv.submit(self.test_file)
-                self.assertIn("MOCK BENIGN", log.output[0])
+                self.assertIn("MOCK BENIGN", log.call_args[0][0])
             stbv.submit(self.test_file, log=False)
             assert "MOCK BENIGN" in mock_print.getvalue()
             
-    @patch('sys.stdout', new_callable=StringIO)
-    @patch('requests.post')
-    def test__successful_analysis_malicious(self, mock_post, mock_print):
+    @patch("requests.post")
+    def test__successful_analysis_malicious(self, mock_post):
         mock_resp = mock_response(message="MOCK MALICIOUS", malicious=True)
         mock_post.return_value = mock_resp
-        with patch("builtins.open", mock_open(read_data="data")) as mock_file:
+        with patch(self.open_at, mock_open(read_data="data")) as mock_file:
             assert open(self.test_file).read() == "data"
             mock_file.assert_called_with(self.test_file)
             stbv = SubmitToBV("fake_user", "fake_pass", "log")
-            with self.assertLogs(level='WARNING') as log:
+            with patch.object(logging.Logger, "warning") as log:
                 stbv.submit(self.test_file)
-                self.assertIn("MOCK MALICIOUS", log.output[0])
+                self.assertIn("MOCK MALICIOUS", log.call_args[0][0])

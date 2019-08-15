@@ -28,12 +28,12 @@ class SubmitToBV():
     def __init__(self, username, password, log="./submit_to_bv.log"):
         logging.basicConfig(
             filename=log,
-            filemode='a',
-            format='[%(levelname)s] %(asctime)s - %(message)s',
-            datefmt='%d-%b-%y %H:%M:%S',
+            filemode="a",
+            format="[%(levelname)s] %(asctime)s - %(message)s",
+            datefmt="%d-%b-%y %H:%M:%S",
             level=logging.INFO)
         self.password = password
-        self.service_url = 'https://api.bluvector.io/hector/v1/results'
+        self.service_url = "https://api.bluvector.io/hector/v1/results"
         self.log = log
         self.logger = logging.getLogger(__name__)
         self.username = username
@@ -61,7 +61,6 @@ class SubmitToBV():
 
         # Submit each file in list one at a time
         for fname in files:
-            result = None
             try:
                 result = self.submit_file(fname)
             except RuntimeError as err:
@@ -73,7 +72,7 @@ class SubmitToBV():
 
             msg = "{0}: {1}".format(fname, result)
             if log:
-                if result['malicious']:
+                if result["malicious"]:
                     self.logger.warning(msg)
                 else:
                     self.logger.info(msg)
@@ -88,14 +87,15 @@ class SubmitToBV():
             parameters:
                 filename: [string] fully qualified path to a file
         """
-        response = requests.post(
-            url=self.service_url,
-            files={
-                'file': open(filename, 'rb')
-            },
-            auth=(self.username, self.password),
-            verify=False
-        )
+        with open(filename, "rb") as f:
+            response = requests.post(
+                url=self.service_url,
+                files={
+                    "file": f
+                },
+                auth=(self.username, self.password),
+                verify=False
+            )
         if not response.ok:
             raise RuntimeError("File: {0}: Status Code: {1} -- {2}"
                                .format(filename, response.status_code, response.reason))
