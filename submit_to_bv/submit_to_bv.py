@@ -1,54 +1,105 @@
-"""
-Change the self.base_url (line 21) to https://api.bluvector.io when moving from staging to production
-"""
+# Copyright 2019 BluVector, A Comcast Company
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
 
 import argparse
 import logging
 import os
 import os.path
 import sys
+import json
 import requests
 
 
 class SubmitToBV():
 
-    def __init__(self, api_key, log, username):
+    def __init__(self, username, password, log="./submit_to_bv.log"):
         logging.basicConfig(
             filename=log,
-            filemode='a',
+            filemode="a",
+            format="[%(levelname)s] %(asctime)s - %(message)s",
+            datefmt="%d-%b-%y %H:%M:%S",
             level=logging.INFO)
-        self.api_key = api_key
-        self.base_url = 'http://api-dev.bluvector.io'
+        self.password = password
+        self.service_url = "https://api.bluvector.io/hector/v1/results"
         self.log = log
         self.logger = logging.getLogger(__name__)
         self.username = username
 
     def submit(self, input_path, log=True):
-        if os.path.exists(input_path) is not True:
+        """
+            Method for providing a path to a file or directory of files to submit. Results of analysis
+            and any errors are stored in log or printed to stdout.
+
+            parameters:
+                input_path: [string] path to file or directory
+                log: [boolean, default: True] When true, stores results in a log file otherwise prints to stdout
+        """
+        if not os.path.exists(input_path):
             raise ValueError("Invalid input path to file or directory provided for upload")
+
+        # Generate file list for submission
         files = []
-        if os.path.isfile(input_path) is True:
+        if os.path.isfile(input_path):
             files.append(os.path.abspath(input_path))
         else:
             for dirpath, dirnames, filenames in os.walk(input_path):
                 files.extend([os.path.abspath(os.path.join(dirpath, name))
                               for name in filenames if not name.startswith(".")])
+
+        # Submit each file in list one at a time
         for fname in files:
-            f = {
-                'file': open(fname, 'rb')
-            }
-            response = requests.post(
-                url='{}/hector/v1/results'.format(self.base_url),
-                files=f,
-                auth=(
-                    self.username,
-                    self.api_key))
-            if response.ok is not True:
-                self.logger.error("File: {}, Status Code: {} -- {}"
-                                  .format(fname, response.status_code, response.reason))
+            try:
+                result = self.submit_file(fname)
+            except RuntimeError as err:
+                if log:
+                    self.logger.error(err)
+                else:
+                    print(err)
+                continue
+
+            msg = "{0}: {1}".format(fname, result)
+            if log:
+                if result["malicious"]:
+                    self.logger.warning(msg)
+                else:
+                    self.logger.info(msg)
             else:
-                self.logger.info("File: {}, Status Code: {} -- {}"
-                                 .format(fname, response.status_code, response.reason))
+                print(msg)
+
+    def submit_file(self, filename):
+        """
+            Method for submitting a single file and receiving analysis results as a JSON object
+            if analysis fails a RuntimeError will be raised
+
+            parameters:
+                filename: [string] fully qualified path to a file
+        """
+        with open(filename, "rb") as f:
+            response = requests.post(
+                url=self.service_url,
+                files={
+                    "file": f
+                },
+                auth=(self.username, self.password),
+                verify=False
+            )
+        if not response.ok:
+            raise RuntimeError("File: {0}: Status Code: {1} -- {2}"
+                               .format(filename, response.status_code, response.reason))
+        return json.loads(response.content)
 
 
 def my_arg_parser(args):
@@ -60,9 +111,9 @@ def my_arg_parser(args):
         help=(
             "BluVector Portal Username"))
     parser.add_argument(
-        "api_key",
+        "password",
         help=(
-            "BluVector Portal Customer Key"))
+            "BluVector Portal Password"))
     parser.add_argument(
         "input_path",
         help=(
@@ -78,7 +129,7 @@ def my_arg_parser(args):
 
 
 def cli(args):
-    client = SubmitToBV(api_key=args.api_key, log=args.log_filename, username=args.username)
+    client = SubmitToBV(args.username, args.password, log=args.log_filename)
     client.submit(args.input_path)
     print("Done")
 

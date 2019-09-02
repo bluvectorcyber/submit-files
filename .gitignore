@@ -9,3 +9,7 @@ __pycache__
 .tox
 coverage.xml
 .python-version
+build/
+dist/
+submit-files/
+submit_to_bv.log
