@@ -25,7 +25,7 @@ import requests
 
 class SubmitToBV():
 
-    def __init__(self, username, password, log="./submit_to_bv.log"):
+    def __init__(self, username, password, log="./submit_to_bv.log", server_hostname="api.bluvector.io"):
         logging.basicConfig(
             filename=log,
             filemode="a",
@@ -33,7 +33,7 @@ class SubmitToBV():
             datefmt="%d-%b-%y %H:%M:%S",
             level=logging.INFO)
         self.password = password
-        self.service_url = "https://api.bluvector.io/hector/v1/results"
+        self.service_url = "https://{0}/hector/v1/results".format(server_hostname)
         self.log = log
         self.logger = logging.getLogger(__name__)
         self.username = username
@@ -124,12 +124,19 @@ def my_arg_parser(args):
         default="./submit_to_bv.log",
         help=(
             "Path to output log file (default: './submit_to_bv.log')"))
+    parser.add_argument(
+        "-s",
+        "--server-hostname",
+        default="api.bluvector.io",
+        help=(
+            "Hostname of the Submit to BluVector service (default: 'api.bluvector.io')"))
     args = parser.parse_args(args)
     return args
 
 
 def cli(args):
-    client = SubmitToBV(args.username, args.password, log=args.log_filename)
+    client = SubmitToBV(args.username, args.password, 
+                        log=args.log_filename, server_hostname=args.server_hostname)
     client.submit(args.input_path)
     print("Done")
 
