@@ -34,7 +34,7 @@ $ tox
 ```
 
 ## Register for BluVector Malware Analysis Portal Access
-To use the BluVector Malware Analysis Portal you must register with BluVector and receive a Username and Password. You can register for free access at https://www.bluvector.io. 
+To use the BluVector Malware Analysis Portal you must register with BluVector and receive a Username and Password. You can register for free access at https://www.bluvector.io/trial. Users are limited to 25 file submissions per day. To request a higher limit please contact info@bluvector.io. 
 
 ## Use
 After installing the package a command line interface is available. 
