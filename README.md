@@ -23,7 +23,7 @@ $ python setup.py build
 ### Install
 To install the python package:
 ```sh
-$ python setup.py install
+$ python setup.py install --user
 ```
 
 ### Test
@@ -41,7 +41,8 @@ After installing the package a command line interface is available.
 
 ```sh
 $ submit-to-bv -h
-usage: submit-to-bv [-h] [-l LOG_FILENAME] username password input_path
+usage: submit-to-bv [-h] [-l LOG_FILENAME] [-s SERVER_HOSTNAME]
+                    username password input_path
 
 Gathering files wished to be sent to BluVector
 
@@ -55,6 +56,9 @@ optional arguments:
   -l LOG_FILENAME, --log-filename LOG_FILENAME
                         Path to output log file (default:
                         './submit_to_bv.log')
+  -s SERVER_HOSTNAME, --server-hostname SERVER_HOSTNAME
+                        Hostname of the Submit to BluVector service (default:
+                        'api.bluvector.io')
 ```
 
 Suspicious files will be logged as WARNING messages while benign files will be logged as INFO messages.

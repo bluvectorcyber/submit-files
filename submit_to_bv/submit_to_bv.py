@@ -18,14 +18,13 @@ import argparse
 import logging
 import os
 import os.path
-import sys
 import json
 import requests
 
 
 class SubmitToBV():
 
-    def __init__(self, username, password, log="./submit_to_bv.log"):
+    def __init__(self, username, password, log="./submit_to_bv.log", server_hostname="api.bluvector.io"):
         logging.basicConfig(
             filename=log,
             filemode="a",
@@ -33,7 +32,7 @@ class SubmitToBV():
             datefmt="%d-%b-%y %H:%M:%S",
             level=logging.INFO)
         self.password = password
-        self.service_url = "https://api.bluvector.io/hector/v1/results"
+        self.service_url = "https://{0}/hector/v1/results".format(server_hostname)
         self.log = log
         self.logger = logging.getLogger(__name__)
         self.username = username
@@ -102,7 +101,7 @@ class SubmitToBV():
         return json.loads(response.content)
 
 
-def my_arg_parser(args):
+def my_arg_parser():
     parser = argparse.ArgumentParser(
         description=(
             "Gathering files wished to be sent to BluVector"))
@@ -124,19 +123,26 @@ def my_arg_parser(args):
         default="./submit_to_bv.log",
         help=(
             "Path to output log file (default: './submit_to_bv.log')"))
-    args = parser.parse_args(args)
-    return args
+    parser.add_argument(
+        "-s",
+        "--server-hostname",
+        default="api.bluvector.io",
+        help=(
+            "Hostname of the Submit to BluVector service (default: 'api.bluvector.io')"))
+    my_args = parser.parse_args()
+    return my_args
 
 
-def cli(args):
-    client = SubmitToBV(args.username, args.password, log=args.log_filename)
-    client.submit(args.input_path)
+def cli(my_args):
+    client = SubmitToBV(my_args.username, my_args.password,
+                        log=my_args.log_filename, server_hostname=my_args.server_hostname)
+    client.submit(my_args.input_path)
     print("Done")
 
 
 def main():
-    args = my_arg_parser(sys.argv[1:])
-    cli(args)
+    my_args = my_arg_parser()
+    cli(my_args)
 
 
 if __name__ == "__main__":
