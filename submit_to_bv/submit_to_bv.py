@@ -22,9 +22,10 @@ import json
 import requests
 
 
-class SubmitToBV():
+class SubmitToBV:
 
-    def __init__(self, username, password, log="./submit_to_bv.log", server_hostname="api.bluvector.io"):
+    def __init__(self, username, password, log="./submit_to_bv.log", server_hostname="api.bluvector.io",
+                 json_output=None):
         logging.basicConfig(
             filename=log,
             filemode="a",
@@ -36,6 +37,8 @@ class SubmitToBV():
         self.log = log
         self.logger = logging.getLogger(__name__)
         self.username = username
+        self.json_output = json_output
+        self.results = {}
 
     def submit(self, input_path, log=True):
         """
@@ -77,6 +80,11 @@ class SubmitToBV():
                     self.logger.info(msg)
             else:
                 print(msg)
+            if self.json_output:
+                # It's possible for large numbers of files to exhaust the machine's memory by storing all results in
+                # memory before dumping them as json to a file. We will only store results if a json output
+                # is configured
+                self.results[fname] = result
 
     def submit_file(self, filename):
         """
@@ -129,20 +137,30 @@ def my_arg_parser():
         default="api.bluvector.io",
         help=(
             "Hostname of the Submit to BluVector service (default: 'api.bluvector.io')"))
+    parser.add_argument(
+        "--json",
+        help=(
+            "Path to output json results file. No file is produced if argument is not present."))
     my_args = parser.parse_args()
     return my_args
 
 
 def cli(my_args):
     client = SubmitToBV(my_args.username, my_args.password,
-                        log=my_args.log_filename, server_hostname=my_args.server_hostname)
+                        log=my_args.log_filename, server_hostname=my_args.server_hostname, json_output=my_args.json)
     client.submit(my_args.input_path)
-    print("Done")
+    return client
 
 
 def main():
+    requests.packages.urllib3.disable_warnings()
     my_args = my_arg_parser()
-    cli(my_args)
+    client = cli(my_args)
+    if client.json_output:
+        print("Creating JSON results file {0}".format(client.json_output))
+        with open(client.json_output, 'w') as f:
+            json.dump(client.results, f)
+    print("Done")
 
 
 if __name__ == "__main__":

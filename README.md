@@ -59,9 +59,13 @@ optional arguments:
   -s SERVER_HOSTNAME, --server-hostname SERVER_HOSTNAME
                         Hostname of the Submit to BluVector service (default:
                         'api.bluvector.io')
+  --json JSON           Path to output json results file. No file is produced
+                        if argument is not present.
 ```
 
 Suspicious files will be logged as WARNING messages while benign files will be logged as INFO messages.
+
+To get feedback when submitting large numbers of files tail the log file.
 
 ## License
 This software is released under under the Apache License, Version 2.0. You may not use this software except in compliance with the License.
