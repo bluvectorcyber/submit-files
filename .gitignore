@@ -13,3 +13,4 @@ build/
 dist/
 submit-files/
 submit_to_bv.log
+/venv/
